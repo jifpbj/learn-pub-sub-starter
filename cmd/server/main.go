@@ -28,6 +28,7 @@ func main() {
 		log.Fatalf("Failed to open a channel: %v", err)
 	}
 
+	fmt.Println("Publishing pause message...")
 	err = pubsub.PublishJSON(
 		ch,
 		routing.ExchangePerilDirect,
@@ -38,6 +39,9 @@ func main() {
 	)
 	if err != nil {
 		log.Fatalf("Failed to publish message: %v", err)
+	}
+	if err == nil {
+		fmt.Println("Pause message published successfully.")
 	}
 
 	// wait for ctrl+c
