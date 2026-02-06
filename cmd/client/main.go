@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -40,8 +38,41 @@ func main() {
 		log.Fatalf("Failed to declare and bind queue to ExchangePerilDirect, %v", err)
 	}
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
-	fmt.Println("RabbitMQ connection closed. Exiting...")
+	gs := gamelogic.NewGameState(username)
+
+	for {
+		words := gamelogic.GetInput()
+		if len(words) == 0 {
+			fmt.Println("No command entered")
+			continue
+		}
+		switch words[0] {
+		case "spawn":
+			fmt.Println("Spawning unit...")
+			err := gs.CommandSpawn(words)
+			if err != nil {
+				fmt.Printf("Error processing spawn command: %v\n", err)
+				continue
+			}
+		case "move":
+			armyMove, err := gs.CommandMove(words)
+			if err != nil {
+				fmt.Printf("Error processing move command: %v\n", err)
+				continue
+			}
+			fmt.Printf("%v moved to %v with units %v", armyMove.Player.Username, armyMove.ToLocation, armyMove.Units)
+		case "status":
+			gs.CommandStatus()
+		case "help":
+			gamelogic.PrintClientHelp()
+		case "spam":
+			fmt.Println("Spamming not allowed yet!")
+		case "quit":
+			gamelogic.PrintQuit()
+			return
+		default:
+			fmt.Println("Command not understood, 'help' for list of commands")
+			continue
+		}
+	}
 }

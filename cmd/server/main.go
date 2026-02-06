@@ -27,6 +27,17 @@ func main() {
 		log.Fatalf("Failed to open a channel: %v", err)
 	}
 
+	_, _, err = pubsub.DeclareAndBind(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.GameLogSlug,
+		routing.GameLogSlug+".*",
+		pubsub.DurableQueue,
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare and bind queue to ExchangePerilTopic, %v", err)
+	}
+
 	gamelogic.PrintServerHelp()
 	var isPaused bool
 	var shouldPublish bool
