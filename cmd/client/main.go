@@ -52,13 +52,11 @@ func main() {
 			err := gs.CommandSpawn(words)
 			if err != nil {
 				fmt.Printf("Error processing spawn command: %v\n", err)
-				continue
 			}
 		case "move":
 			armyMove, err := gs.CommandMove(words)
 			if err != nil {
 				fmt.Printf("Error processing move command: %v\n", err)
-				continue
 			}
 			fmt.Printf("%v moved to %v with units %v", armyMove.Player.Username, armyMove.ToLocation, armyMove.Units)
 		case "status":
