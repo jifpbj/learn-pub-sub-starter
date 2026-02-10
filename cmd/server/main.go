@@ -32,7 +32,7 @@ func main() {
 		routing.ExchangePerilTopic,
 		routing.GameLogSlug,
 		routing.GameLogSlug+".*",
-		pubsub.DurableQueue,
+		pubsub.SimpleQueueDurable,
 	)
 	if err != nil {
 		log.Fatalf("Failed to declare and bind queue to ExchangePerilTopic, %v", err)

@@ -27,18 +27,9 @@ func main() {
 		log.Fatalf("Failed to get username from ClientWelcome, %v", err)
 	}
 
-	_, _, err = pubsub.DeclareAndBind(
-		conn,
-		routing.ExchangePerilDirect,
-		fmt.Sprintf("%s.%s", routing.PauseKey, username),
-		routing.PauseKey,
-		pubsub.TransientQueue,
-	)
-	if err != nil {
-		log.Fatalf("Failed to declare and bind queue to ExchangePerilDirect, %v", err)
-	}
-
 	gs := gamelogic.NewGameState(username)
+
+	pubsub.SubscribeJSON(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+gs.GetUsername(), routing.PauseKey, pubsub.SimpleQueueTransient, handlerPause(gs))
 
 	for {
 		words := gamelogic.GetInput()
@@ -72,5 +63,12 @@ func main() {
 			fmt.Println("Command not understood, 'help' for list of commands")
 			continue
 		}
+	}
+}
+
+func handlerPause(gs *gamelogic.GameState) func(routing.PlayingState) {
+	return func(ps routing.PlayingState) {
+		defer fmt.Print("> ")
+		gs.HandlePause(ps)
 	}
 }
