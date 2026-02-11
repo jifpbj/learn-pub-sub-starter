@@ -29,7 +29,34 @@ func main() {
 
 	gs := gamelogic.NewGameState(username)
 
-	pubsub.SubscribeJSON(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+gs.GetUsername(), routing.PauseKey, pubsub.SimpleQueueTransient, handlerPause(gs))
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to create channel: %v", err)
+	}
+
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.ArmyMovesPrefix+"."+username,
+		routing.ArmyMovesPrefix+".*",
+		pubsub.SimpleQueueTransient,
+		handlerMove(gs),
+	)
+	if err != nil {
+		log.Fatalf("Failed to subscribe to army moves: %v", err)
+	}
+
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilDirect,
+		routing.PauseKey+"."+gs.GetUsername(),
+		routing.PauseKey,
+		pubsub.SimpleQueueTransient,
+		handlerPause(gs),
+	)
+	if err != nil {
+		log.Fatalf("Failed to subscribe to pause messages: %v", err)
+	}
 
 	for {
 		words := gamelogic.GetInput()
@@ -49,6 +76,16 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error processing move command: %v\n", err)
 			}
+			err = pubsub.PublishJSON(
+				ch,
+				routing.ExchangePerilTopic,
+				routing.ArmyMovesPrefix+"."+username,
+				armyMove,
+			)
+			if err != nil {
+				fmt.Printf("Failed to publish move command: %v\n", err)
+			}
+			fmt.Printf("Published move command to RabbitMQ: %v\n", armyMove)
 			fmt.Printf("%v moved to %v with units %v", armyMove.Player.Username, armyMove.ToLocation, armyMove.Units)
 		case "status":
 			gs.CommandStatus()
@@ -70,5 +107,12 @@ func handlerPause(gs *gamelogic.GameState) func(routing.PlayingState) {
 	return func(ps routing.PlayingState) {
 		defer fmt.Print("> ")
 		gs.HandlePause(ps)
+	}
+}
+
+func handlerMove(gs *gamelogic.GameState) func(gamelogic.ArmyMove) {
+	return func(am gamelogic.ArmyMove) {
+		defer fmt.Print("> ")
+		gs.HandleMove(am)
 	}
 }

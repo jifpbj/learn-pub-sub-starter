@@ -82,5 +82,4 @@ func SubscribeJSON[T any](
 			d.Ack(false)
 		}
 	}()
-	return nil
 }
