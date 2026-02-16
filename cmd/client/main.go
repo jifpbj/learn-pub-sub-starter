@@ -115,7 +115,6 @@ func handlerMove(gs *gamelogic.GameState) func(gamelogic.ArmyMove) pubsub.Acktyp
 	return func(am gamelogic.ArmyMove) pubsub.Acktype {
 		defer fmt.Print("> ")
 		move := gs.HandleMove(am)
-		fmt.Printf("Move result: %v\n", move)
 		switch move {
 		case gamelogic.MoveOutComeSafe:
 			return pubsub.Ack
@@ -123,8 +122,8 @@ func handlerMove(gs *gamelogic.GameState) func(gamelogic.ArmyMove) pubsub.Acktyp
 			return pubsub.Ack
 		case gamelogic.MoveOutcomeSamePlayer:
 			return pubsub.NackDiscard
-		default:
-			return pubsub.NackDiscard
 		}
+		fmt.Printf("Unknown move outcome: %v\n", move)
+		return pubsub.NackDiscard
 	}
 }
