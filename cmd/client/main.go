@@ -116,7 +116,7 @@ func handlerMove(gs *gamelogic.GameState) func(gamelogic.ArmyMove) pubsub.Acktyp
 		defer fmt.Print("> ")
 		move := gs.HandleMove(am)
 		switch move {
-		case gamelogic.MoveOutComeSafe:
+		case gamelogic.MoveOutcomeSafe:
 			return pubsub.Ack
 		case gamelogic.MoveOutcomeMakeWar:
 			return pubsub.Ack

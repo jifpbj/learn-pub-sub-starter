@@ -32,7 +32,7 @@ func DeclareAndBind(
 		queueType != SimpleQueueDurable, // delete when unused
 		queueType != SimpleQueueDurable, // exclusive
 		false,                           // no-wait
-		nil,                             // args
+		amqp.Table{"x-dead-letter-exchange": "peril_dlx"},
 	)
 	if err != nil {
 		return nil, amqp.Queue{}, fmt.Errorf("could not declare queue: %v", err)
@@ -87,7 +87,7 @@ func SubscribeJSON[T any](
 			switch handler(msg) {
 			case Ack:
 				d.Ack(false)
-				fmt.Printf("Handler returned Nack for message: %v\n", msg)
+				fmt.Printf("Handler returned Ack for message: %v\n", msg)
 			case NackRequeue:
 				d.Nack(false, true)
 				fmt.Printf("Handler returned Nack Requeue for message: %v\n", msg)
