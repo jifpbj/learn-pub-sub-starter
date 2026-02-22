@@ -27,17 +27,27 @@ func main() {
 		log.Fatalf("Failed to open a channel: %v", err)
 	}
 
-	_, _, err = pubsub.DeclareAndBind(
+	// _, _, err = pubsub.DeclareAndBind(
+	// 	conn,
+	// 	routing.ExchangePerilTopic,
+	// 	routing.GameLogSlug,
+	// 	routing.GameLogSlug+".*",
+	// 	pubsub.SimpleQueueDurable,
+	// )
+	// if err != nil {
+	// 	log.Fatalf("Failed to declare and bind queue to ExchangePerilTopic, %v", err)
+	// }
+	err = pubsub.SubscribeGob(
 		conn,
 		routing.ExchangePerilTopic,
 		routing.GameLogSlug,
 		routing.GameLogSlug+".*",
 		pubsub.SimpleQueueDurable,
+		handlerGob,
 	)
 	if err != nil {
 		log.Fatalf("Failed to declare and bind queue to ExchangePerilTopic, %v", err)
 	}
-
 	gamelogic.PrintServerHelp()
 	var isPaused bool
 	var shouldPublish bool
@@ -82,4 +92,13 @@ func main() {
 	// signal.Notify(signalChan, os.Interrupt)
 	// <-signalChan
 	// fmt.Println("RabbitMQ connection closed. Exiting...")
+}
+
+func handlerGob(msg routing.GameLog) pubsub.Acktype {
+	defer fmt.Print("> ")
+	err := gamelogic.WriteLog(msg)
+	if err != nil {
+		return pubsub.NackRequeue
+	}
+	return pubsub.Ack
 }
